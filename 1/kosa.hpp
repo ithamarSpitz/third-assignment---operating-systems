@@ -1,5 +1,5 @@
-#ifndef KOSA_HPP
-#define KOSA_HPP
+#ifndef GRAPH_HPP
+#define GRAPH_HPP
 
 #include <vector>
 #include <stack>
@@ -23,4 +23,4 @@ private:
     std::vector<std::vector<int>> getTranspose();
 };
 
-#endif // KOSA_HPP
+#endif // GRAPH_HPP
