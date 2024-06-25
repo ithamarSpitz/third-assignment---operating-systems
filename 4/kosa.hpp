@@ -16,6 +16,7 @@ public:
     void RemoveEdge(int i, int j);
     std::vector<std::vector<int>> Kosaraju();
     void NewGraph(int n, int m, const std::vector<std::vector<int>>& edges);
+    void printOutput(const std::vector<std::vector<int>>& components);
 
 private:
     void dfs1(int v, std::vector<bool>& visited, std::stack<int>& Stack);
