@@ -98,3 +98,13 @@ std::vector<std::vector<int>> Graph::getTranspose() {
     }
     return transpose;
 }
+
+void Graph::printOutput(const std::vector<std::vector<int>>& components) {
+    std::cout << "Output:" << std::endl;
+    for (const auto& component : components) {
+        for (int vertex : component) {
+            std::cout << vertex << " ";
+        }
+        std::cout << std::endl;
+    }
+}

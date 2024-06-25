@@ -1,85 +1,112 @@
 #include "list_Kosa.hpp"
 #include <algorithm>
 #include <stack>
+#include <iostream>
+using namespace std;
 
 Graph_list::Graph_list() : n(0), m(0) {}
 
-void Graph_list::NewGraph(int n, int m, const std::vector<std::list<int>>& edges) {
-    this->n = n;
-    this->m = m;
-    this->adj.assign(n, std::list<int>());
-
-    for (int i = 0; i < n; ++i) {
-        for (int j : edges[i]) {
-            NewEdge(i + 1, j + 1); // Convert to 1-based indexing
+void Graph_list::NewGraph(int vertices, int edges, const std::vector<std::vector<int>>& edge) {
+    this->n = vertices;
+    this->m = edges;
+    this->vertices.clear();
+    this->vertices.resize(n);
+    
+    for (int i = 0; i < n; i++) {
+        this->vertices[i] = Vertex(i);
+    }
+    
+    for (const auto& e : edge) {
+        if (e.size() == 2) {
+            int from = e[0] - 1;
+            int to = e[1] - 1;
+            if (from >= 0 && from < n && to >= 0 && to < n) {
+                this->vertices[from].children.push_back(to);
+            }
         }
     }
+
+    std::cout << "Graph created with " << n << " vertices and " << m << " edges." << std::endl;
 }
 
 void Graph_list::NewEdge(int i, int j) {
-    adj[i - 1].push_back(j - 1); // Convert to 0-based indexing
+    if (i > 0 && i <= n && j > 0 && j <= n) {
+        vertices[i-1].children.push_back(j-1);
+        m++;
+    }
 }
 
 void Graph_list::RemoveEdge(int i, int j) {
-    auto& edges = adj[i - 1];
-    edges.remove(j - 1); // Using list's remove function for O(n) removal
+    if (i > 0 && i <= n && j > 0 && j <= n) {
+        vertices[i-1].children.remove(j-1);
+        m--;
+    }
 }
 
-std::vector<std::list<int>> Graph_list::Kosaraju() {
+std::vector<std::vector<int>> Graph_list::Kosaraju() {
+    std::cout << "Runs Kosaraju algorithm on the graph..." << std::endl;
     std::stack<int> Stack;
     std::vector<bool> visited(n, false);
-    std::vector<std::list<int>> components;
 
-    // Step 1: Order vertices by finish time
     for (int i = 0; i < n; i++) {
         if (!visited[i]) {
             dfs1(i, visited, Stack);
         }
     }
 
-    // Step 2: Transpose the graph
-    std::vector<std::list<int>> transpose = getTranspose();
-
-    // Step 3: Find strongly connected components
+    transpose = getTranspose();
     std::fill(visited.begin(), visited.end(), false);
+    std::vector<std::vector<int>> result;
+
     while (!Stack.empty()) {
         int v = Stack.top();
         Stack.pop();
         if (!visited[v]) {
-            std::list<int> component;
-            dfs2(v, visited, transpose, component);
-            components.push_back(component);
+            std::vector<int> component;
+            dfs2(v, visited, component);
+            result.push_back(component);
         }
     }
-    return components;
+    std::cout << "Kosaraju algorithm completed. Found " << result.size() << " SCCs." << std::endl;
+    return result;
 }
 
 void Graph_list::dfs1(int v, std::vector<bool>& visited, std::stack<int>& Stack) {
     visited[v] = true;
-    for (int u : adj[v]) {
-        if (!visited[u]) {
-            dfs1(u, visited, Stack);
+    for (int child : vertices[v].children) {
+        if (!visited[child]) {
+            dfs1(child, visited, Stack);
         }
     }
     Stack.push(v);
 }
 
-void Graph_list::dfs2(int v, std::vector<bool>& visited, const std::vector<std::list<int>>& transpose, std::list<int>& component) {
+void Graph_list::dfs2(int v, std::vector<bool>& visited, std::vector<int>& component) {
     visited[v] = true;
     component.push_back(v);
-    for (int u : transpose[v]) {
-        if (!visited[u]) {
-            dfs2(u, visited, transpose, component);
+    for (int child : transpose[v].children) {
+        if (!visited[child]) {
+            dfs2(child, visited, component);
         }
     }
 }
 
-std::vector<std::list<int>> Graph_list::getTranspose() {
-    std::vector<std::list<int>> transpose(n);
-    for (int v = 0; v < n; v++) {
-        for (int u : adj[v]) {
-            transpose[u].push_back(v);
+std::vector<Vertex> Graph_list::getTranspose() {
+    std::vector<Vertex> trans(n);
+    for (int i = 0; i < n; i++) {
+        for (int child : vertices[i].children) {
+            trans[child].children.push_back(i);
         }
     }
-    return transpose;
+    return trans;
+}
+
+void Graph_list::printOutput(const std::vector<std::vector<int>>& components) {
+    std::cout << "Output:" << std::endl;
+    for (const auto& scc : components) {
+        for (int vertex : scc) {
+            std::cout << vertex + 1 << " ";
+        }
+        std::cout << std::endl;
+    }
 }

@@ -5,23 +5,33 @@
 #include <list>
 #include <stack>
 
+class Vertex {
+public:
+    int id;
+    std::list<int> children;
+
+    Vertex() : id(-1) {}
+    Vertex(int _id) : id(_id) {}
+};
+
 class Graph_list {
 public:
-    int n; // Number of vertices
-    int m; // Number of arcs
-    std::vector<std::list<int>> adj; // Adjacency list using list
-
     Graph_list();
 
     void NewEdge(int i, int j);
     void RemoveEdge(int i, int j);
-    std::vector<std::list<int>> Kosaraju();
-    void NewGraph(int n, int m, const std::vector<std::list<int>>& edges);
+    std::vector<std::vector<int>> Kosaraju();
+    void NewGraph(int vertices, int edges, const std::vector<std::vector<int>>& edge);
+    void printOutput(const std::vector<std::vector<int>>& components);
 
 private:
+    int n; // Number of vertices
+    int m; // Number of arcs
+    std::vector<Vertex> vertices;
+    std::vector<Vertex> transpose;
     void dfs1(int v, std::vector<bool>& visited, std::stack<int>& Stack);
-    void dfs2(int v, std::vector<bool>& visited, const std::vector<std::list<int>>& transpose, std::list<int>& component);
-    std::vector<std::list<int>> getTranspose();
+    void dfs2(int v, std::vector<bool>& visited, std::vector<int>& component);
+    std::vector<Vertex> getTranspose();
 };
 
 #endif // GRAPH_LIST_HPP

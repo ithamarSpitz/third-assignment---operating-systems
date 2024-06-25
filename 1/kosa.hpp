@@ -1,5 +1,5 @@
-#ifndef GRAPH_HPP
-#define GRAPH_HPP
+#ifndef KOSA_HPP
+#define KOSA_HPP
 
 #include <vector>
 #include <stack>
@@ -16,6 +16,7 @@ public:
     void RemoveEdge(int i, int j);
     std::vector<std::vector<int>> Kosaraju();
     void NewGraph(int n, int m, const std::vector<std::vector<int>>& edges);
+    void printOutput(const std::vector<std::vector<int>>& components);
 
 private:
     void dfs1(int v, std::vector<bool>& visited, std::stack<int>& Stack);
@@ -23,4 +24,4 @@ private:
     std::vector<std::vector<int>> getTranspose();
 };
 
-#endif // GRAPH_HPP
+#endif // KOSA_HPP
