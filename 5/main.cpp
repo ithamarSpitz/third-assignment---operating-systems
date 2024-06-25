@@ -1,6 +1,7 @@
 // main.c
 #include "reactor.hpp"
 #include "kosa.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +14,8 @@
 
 #define PORT "9034"   // port we're listening on
 
+Reactor* reactor;
+
 void handleClient(int fd) {
     char buf[256];
     int nbytes;
@@ -23,6 +26,7 @@ void handleClient(int fd) {
             perror("recv");
         }
         close(fd);
+        removeFdFromReactor(reactor, fd);
     } else {
         printf("Received: %s\n", buf);
         if (send(fd, buf, nbytes, 0) == -1) {
@@ -32,7 +36,7 @@ void handleClient(int fd) {
 }
 
 int main(void) {
-    Reactor* reactor = startReactor();
+    reactor = startReactor();
     if (reactor == NULL) {
         perror("Failed to start reactor");
         exit(1);
