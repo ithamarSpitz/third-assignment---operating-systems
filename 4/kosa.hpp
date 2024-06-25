@@ -1,30 +1,27 @@
-
 #ifndef KOSA_HPP
 #define KOSA_HPP
 
 #include <vector>
-#include <string>
+#include <stack>
 
-using namespace std;
+class Graph {
+public:
+    int n; // Number of vertices
+    int m; // Number of arcs
+    std::vector<std::vector<int>> adj; // Adjacency list
 
-// you should add a global class/variable of the graph itself
+    Graph();
+    
+    void NewEdge(int i, int j);
+    void RemoveEdge(int i, int j);
+    std::vector<std::vector<int>> Kosaraju();
+    void NewGraph(int n, int m, const std::vector<std::vector<int>>& edges);
+    void printOutput(const std::vector<std::vector<int>>& components);
 
-//creates new graph, returns -1 if fail
-int NewGraph(int n, int m, vector<vector<int>> edges);
+private:
+    void dfs1(int v, std::vector<bool>& visited, std::stack<int>& Stack);
+    void dfs2(int v, std::vector<bool>& visited, const std::vector<std::vector<int>>& transpose, std::vector<int>& component);
+    std::vector<std::vector<int>> getTranspose();
+};
 
-//adds new edge, returns -1 if fail
-int NewEdge(int i, int j);
-
-//remove specific edge, returns -1 if fail
-int RemoveEdge(int i, int j);
-
-//returns vector of Strongly Connected Components vectors
-vector<vector<int>> Kosaraju();
-
-//parsethe user's input, returns array of variables (the first is the desired function or -1 if failed)
-vector<int> parse(string input);
-
-//using parse's output run the desired function
-int eval(vector<int>);
-
-#endif 
+#endif // KOSA_HPP
