@@ -8,13 +8,18 @@ using namespace std;
 
 Graph::Graph() : n(0), m(0) {}
 
-void Graph::NewGraph(int n, int m, const std::vector<std::vector<int>>& edges) {
+void Graph::NewGraph(int n, int m) {
     this->n = n;
     this->m = m;
     this->adj.assign(n, std::vector<int>());
+    int i = -1; 
+    int j = -1;
 
-    for (const auto& edge : edges) {
-        NewEdge(edge[0], edge[1]);
+    std::cout << "enter the edges:" << std::endl;
+    for (int k = 0; k < m; k++) {
+        std::cout << "edge" << k+1 << ": " << std::endl;
+        std::cin >> i >> j;
+        NewEdge(i, j);   
     }
 }
 

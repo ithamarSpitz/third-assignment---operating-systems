@@ -15,7 +15,7 @@ public:
     void NewEdge(int i, int j);
     void RemoveEdge(int i, int j);
     std::vector<std::vector<int>> Kosaraju();
-    void NewGraph(int n, int m, const std::vector<std::vector<int>>& edges);
+    void NewGraph(int n, int m);
     void printOutput(const std::vector<std::vector<int>>& components);
 
 private:
