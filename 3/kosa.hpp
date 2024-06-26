@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <stack>
+#include <string>
+using namespace std;
+
 
 class Graph {
 public:
@@ -17,6 +20,8 @@ public:
     std::vector<std::vector<int>> Kosaraju();
     void NewGraph(int n, int m);
     void printOutput(const std::vector<std::vector<int>>& components);
+    vector<string> parse(const string& command);
+    bool eval(Graph& graph, const vector<string>& parts);
 
 private:
     void dfs1(int v, std::vector<bool>& visited, std::stack<int>& Stack);
