@@ -13,27 +13,12 @@ void Graph::NewGraph(int n, int m) {
     this->n = n;
     this->m = m;
     this->adj.assign(n, std::vector<int>());
-    int i = -1; 
-    int j = -1;
-
-    std::cout << "enter the edges:" << std::endl;
-    for (int k = 0; k < m; k++) {
-        std::cout << "edge" << k+1 << ": " << std::endl;
-        std::cin >> i >> j;
-        NewEdge(i, j);   
-    }
 }
 
 void Graph::NewEdge(int i, int j) {
-    if (i > n || j > n)
-    {
-        std::cout << "ERROR: bad vertice! , try again" << std::endl;
-        std::cin >> i;
-        std::cin >> j;
-        NewEdge(i,j);
-    }
+    if (i > n || j > n) return;
     else {
-        adj[i - 1].push_back(j - 1); // Convert to 0-based indexing
+        adj[i - 1].push_back(j - 1); 
     }
 }
 
@@ -43,7 +28,7 @@ void Graph::RemoveEdge(int i, int j) {
 }
 
 std::vector<std::vector<int>> Graph::Kosaraju() {
-    std::cout << "Runs Kosaraju algorithm on the graph..." << std::endl;
+    // std::cout << "Runs Kosaraju algorithm on the graph..." << std::endl;
     std::stack<int> Stack;
     std::vector<bool> visited(n, false);
     std::vector<std::vector<int>> components;
@@ -106,7 +91,7 @@ std::vector<std::vector<int>> Graph::getTranspose() {
 }
 
 void Graph::printOutput(const std::vector<std::vector<int>>& components) {
-    std::cout << "Output:" << std::endl;
+    std::cout << "Kosaraju Output:" << std::endl;
     for (const auto& component : components) {
         for (int vertex : component) {
             std::cout << vertex << " ";
@@ -124,8 +109,8 @@ vector<string> Graph::parse(const string& command) {
     while (getline(iss, part, ' ')) {
         parts.push_back(part);
     }
-
-    if (parts.size() > 1) {
+    // If command is "Newgraph" don't split edges (will do it automatically in eval)
+    if (parts.size() > 1 && parts[0] != "Newgraph") {
         istringstream iss_args(parts[1]);
         vector<string> args;
         // Split command args based on ','
@@ -139,7 +124,7 @@ vector<string> Graph::parse(const string& command) {
     // Check if the command is valid
     if (!parts.empty()) {
         string cmd = parts[0];
-        if (cmd == "Newgraph" && parts.size() == 3) {
+        if (cmd == "Newgraph" && parts.size() > 1) {
             return parts;
         } else if (cmd == "Kosaraju" && parts.size() == 1) {
             return parts;
@@ -155,7 +140,7 @@ vector<string> Graph::parse(const string& command) {
     return vector<string>();
 }
 
-bool Graph::eval(Graph& graph, const vector<string>& parts) {
+bool Graph::eval(const vector<string>& parts) {
     const string& cmd = parts[0];
 
     if (cmd == "exit") {
@@ -164,19 +149,51 @@ bool Graph::eval(Graph& graph, const vector<string>& parts) {
     if (cmd == "Newgraph") {
         int n = stoi(parts[1]);
         int m = stoi(parts[2]);
-        graph.NewGraph(n, m);
-    } else if (cmd == "Kosaraju") {
-        vector<vector<int>> components = graph.Kosaraju();
-        graph.printOutput(components);
-    } else if (cmd == "Newedge") {
+        //If Number of vertices of edges < 1 - exit program
+        if (n < 1 || m < 1) return false;
+        NewGraph(n, m);
+        //If edges failed to complete - exit program
+        if (!evalEdges(parts))
+        {
+            return false;
+        }
+    }
+    else if (cmd == "Kosaraju") {
+        vector<vector<int>> components = Kosaraju();
+        //If Kosaraju failed - exit program
+        if (components.empty()) return false;
+        printOutput(components);
+    } 
+    else if (cmd == "Newedge") {
         int i = stoi(parts[1]);
         int j = stoi(parts[2]);
-        graph.NewEdge(i, j);
-    } else if (cmd == "Removeedge") {
+        //If edges wrong - exit program
+        if (i > n || i < 1 || j > n || j < 1) return false;
+        NewEdge(i, j);
+    } 
+    else if (cmd == "Removeedge") {
         int i = stoi(parts[1]);
         int j = stoi(parts[2]);
-        graph.RemoveEdge(i, j);
+        //If edges wrong - exit program
+        if (i > n || i < 1 || j > n || j < 1) return false;
+        RemoveEdge(i, j);
     }
     
+    return true;
+}
+
+bool Graph::evalEdges(const vector<string>& parts) {
+    // Process each edge and call NewEdge
+    // Split command edges based on ','
+    for (size_t i = 2; i < parts.size(); ++i) {
+        istringstream iss_edge(parts[i]);
+        string edge;
+        getline(iss_edge, edge, ',');
+        int from = stoi(edge);
+        getline(iss_edge, edge, ',');
+        int to = stoi(edge);
+        if (from > n || from < 1 || to > n || to < 1) return false;
+        NewEdge(from, to);
+    }
     return true;
 }

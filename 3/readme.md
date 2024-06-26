@@ -27,16 +27,7 @@ Creates a new graph with `n` vertices and `m` edges. The program will then promp
 
 **Example**:
 ```
-Newgraph 5,5
-```
-
-**Expected Input After Command**:
-```
-1 2
-2 3
-3 1
-3 4
-4 5
+Newgraph 5,5 1,2 2,3 3,1 3,4 4,5
 ```
 
 ### Kosaraju
