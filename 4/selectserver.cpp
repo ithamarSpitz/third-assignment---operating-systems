@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "kosa.hpp"
+#include <string>
 #define PORT "9034"   // port we're listening on
 
 // get sockaddr, IPv4 or IPv6:
@@ -142,15 +143,15 @@ int main(void)
                     } else {
                         // we got some data from a client
 
-                        string input(buf);
-                        vector<int> data = parse(input);//from kosa.hpp
+                        std::string input(buf);
+                        std::vector<int> data = parse(input);//from kosa.hpp
                         eval(data);//from kosa.hpp
 
                         for(j = 0; j <= fdmax; j++) {
                             // send to everyone!
                             if (FD_ISSET(j, &master)) {
                                 // except the listener and ourselves
-                                if (j != listener && j != i) {
+                                if (j != listener && j == i) {
                                     if (send(j, buf, nbytes, 0) == -1) {
                                         perror("send");
                                     }
