@@ -56,7 +56,6 @@ public:
 
 private:
     void run() {
-        cout << "Reactor running..." << std::endl;
         while (running) {
             std::vector<pollfd> poll_fds;
             poll_fds.reserve(fd_map.size());
@@ -78,13 +77,11 @@ private:
                 if (pfd.revents & POLLIN) {
                     auto it = fd_map.find(pfd.fd);
                     if (it != fd_map.end()) {
-                        std::cout << "Handling fd: " << pfd.fd << std::endl;
                         it->second(pfd.fd);
                     }
                 }
             }
         }
-        cout << "Reactor stopping..." << std::endl;
     }
 
     std::unordered_map<int, ReactorFunc> fd_map;

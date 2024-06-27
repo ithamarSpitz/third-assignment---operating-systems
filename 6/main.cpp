@@ -1,166 +1,176 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+// selectserver.cpp
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <pthread.h>
-#include "kosa.hpp"
+#include <iostream>
 #include <string>
-#include <vector>
-#include <algorithm>
+#include <memory>
+#include "kosa.hpp"
+#include "reactor.hpp"
 
+Graph g;
+constexpr const char* PORT = "9034";   // port we're listening on
 
-#define PORT "9034"
+class Server {
+public:
+    Server() : reactor(std::make_unique<Reactor<int>>()) {}
 
-// Shared graph data structure
-std::vector<std::vector<int>> graph;
-pthread_mutex_t graph_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET) {
-        return &(((struct sockaddr_in*)sa)->sin_addr);
-    }
-    return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
-void handle_client(int client_fd)
-{
-    char buf[256];
-    int nbytes;
-
-    while(1) {
-        if ((nbytes = recv(client_fd, buf, sizeof buf, 0)) <= 0) {
-            if (nbytes == 0) {
-                printf("Client on socket %d disconnected\n", client_fd);
-            } else {
-                perror("recv");
-            }
-            close(client_fd);
+    void run() {
+        int listener = setup_listener();
+        if (listener == -1) {
+            std::cerr << "Failed to setup listener\n";
             return;
         }
 
-        buf[nbytes] = '\0';
-        std::string input(buf);
-        std::vector<int> data = parse(input);
+        reactor->addFdToReactor(listener, [this](int fd) { handle_new_connection(fd); });
+        reactor->startReactor();
 
-        pthread_mutex_lock(&graph_mutex);
+        std::cout << "Server running. Press 'q' to quit." << std::endl;
 
-        if (input.find("new_graph") != std::string::npos) {
-            graph.clear();
-            graph.resize(data[1]);
-        } else if (input.find("add_edge") != std::string::npos) {
-            if (data[1] < graph.size() && data[2] < graph.size()) {
-                graph[data[1]].push_back(data[2]);
-            }
-        } else if (input.find("remove_edge") != std::string::npos) {
-            if (data[1] < graph.size()) {
-                auto it = std::find(graph[data[1]].begin(), graph[data[1]].end(), data[2]);
-                if (it != graph[data[1]].end()) {
-                    graph[data[1]].erase(it);
+        // Non-blocking input handling
+        while (true) {
+            if (std::cin.rdbuf()->in_avail() > 0) {
+                char input;
+                std::cin >> input;
+
+                cout << input << endl;
+                if (input == 'q') {
+                    break;
                 }
             }
-        } else if (input.find("kosaraju") != std::string::npos) {
-            std::vector<std::vector<int>> result = kosaraju();
-            std::string response = "Kosaraju result: ";
-            for (const auto& scc : result) {
-                response += "[";
-                for (int v : scc) {
-                    response += std::to_string(v) + ",";
-                }
-                response += "] ";
-            }
-            send(client_fd, response.c_str(), response.length(), 0);
+
+            // Sleep for a short duration to avoid busy waiting
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        pthread_mutex_unlock(&graph_mutex);
-
-        send(client_fd, "Command processed", 18, 0);
+        reactor->stopReactor();
+        close(listener);
     }
-}
 
-void *client_thread(void *arg)
-{
-    int client_fd = *((int*)arg);
-    free(arg);
-    handle_client(client_fd);
-    return NULL;
-}
 
-int main(void)
-{
-    int listener;
-    int newfd;
-    struct sockaddr_storage remoteaddr;
-    socklen_t addrlen;
-    char remoteIP[INET6_ADDRSTRLEN];
-    int yes=1;
-    int rv;
-    struct addrinfo hints, *ai, *p;
+private:
+    std::unique_ptr<Reactor<int>> reactor;
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-
-    if ((rv = getaddrinfo(NULL, PORT, &hints, &ai)) != 0) {
-        fprintf(stderr, "selectserver: %s\n", gai_strerror(rv));
-        exit(1);
+    static void* get_in_addr(struct sockaddr *sa) {
+        if (sa->sa_family == AF_INET) {
+            return &(((struct sockaddr_in*)sa)->sin_addr);
+        }
+        return &(((struct sockaddr_in6*)sa)->sin6_addr);
     }
+
+    int setup_listener() {
+        struct addrinfo hints{}, *ai, *p;
+        int listener;
+        int yes = 1;
+        int rv;
+
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_PASSIVE;
+        if ((rv = getaddrinfo(nullptr, PORT, &hints, &ai)) != 0) {
+            std::cerr << "getaddrinfo: " << gai_strerror(rv) << '\n';
+            return -1;
+        }
     
-    for(p = ai; p != NULL; p = p->ai_next) {
-        listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (listener < 0) continue;
+        for(p = ai; p != nullptr; p = p->ai_next) {
+            listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+            if (listener < 0) continue;
         
-        setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+            setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
-        if (bind(listener, p->ai_addr, p->ai_addrlen) < 0) {
-            close(listener);
-            continue;
+            if (bind(listener, p->ai_addr, p->ai_addrlen) < 0) {
+                close(listener);
+                continue;
+            }
+
+            break;
         }
 
-        break;
+        freeaddrinfo(ai);
+
+        if (p == nullptr) {
+            std::cerr << "Failed to bind\n";
+            return -1;
+        }
+
+        if (listen(listener, 10) == -1) {
+            perror("listen");
+            return -1;
+        }
+
+        return listener;
     }
 
-    if (p == NULL) {
-        fprintf(stderr, "selectserver: failed to bind\n");
-        exit(2);
-    }
-
-    freeaddrinfo(ai);
-
-    if (listen(listener, 10) == -1) {
-        perror("listen");
-        exit(3);
-    }
-
-    printf("Server: waiting for connections...\n");
-
-    while(1) {
-        addrlen = sizeof remoteaddr;
-        newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen);
+    void handle_new_connection(int listener) {
+        struct sockaddr_storage remoteaddr;
+        char remoteIP[INET6_ADDRSTRLEN];
+        socklen_t addrlen = sizeof remoteaddr;
+        int newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen);
 
         if (newfd == -1) {
             perror("accept");
-            continue;
+        } else {
+            std::cout << "New connection from " 
+                      << inet_ntop(remoteaddr.ss_family,
+                                   get_in_addr((struct sockaddr*)&remoteaddr),
+                                   remoteIP, INET6_ADDRSTRLEN)
+                      << " on socket " << newfd << '\n';
+        
+            reactor->addFdToReactor(newfd, [this](int fd) { handle_client_data(fd); });
         }
-
-        printf("Server: new connection from %s on socket %d\n",
-            inet_ntop(remoteaddr.ss_family,
-                get_in_addr((struct sockaddr*)&remoteaddr),
-                remoteIP, INET6_ADDRSTRLEN),
-            newfd);
-
-        int *client_fd = (int*)malloc(sizeof(int));
-        *client_fd = newfd;
-        pthread_t thread;
-        pthread_create(&thread, NULL, client_thread, client_fd);
-        pthread_detach(thread);
     }
 
+    void handle_client_data(int fd) {
+        char buf[256];
+        int nbytes = recv(fd, buf, sizeof buf, 0);
+        if (nbytes <= 0) {
+            if (nbytes == 0) {
+                std::cout << "Socket " << fd << " hung up\n";
+            } else {
+                perror("recv");
+            }
+            close(fd);
+            reactor->removeFdFromReactor(fd);
+        } else {
+            std::string input(buf, nbytes);
+            if (input[0] == 'q'){
+                reactor->stopReactor();
+            }
+            try
+            {
+                input = input.substr(0, input.length() - 1);
+                std::vector<string> data = g.parse(input);
+                g.eval(data);            }
+            catch(const std::exception& e)
+            {
+                std::cout << e.what() << '\n';
+            }
+
+
+            // // Send to all other clients
+            // for (const auto& [j, _] : reactor->getFdMap()) {
+            //     if (j != fd) {
+            //         if (send(j, buf, nbytes, 0) == -1) {
+            //             perror("send");
+            //         }
+            //     }
+            // }
+        }
+        reactor->addFdToReactor(fd, [this](int fd) { handle_client_data(fd); });
+
+    }
+
+
+};
+
+int main() {
+    Server server;
+    server.run();
     return 0;
 }
