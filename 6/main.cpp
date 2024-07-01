@@ -14,6 +14,7 @@
 #include "kosa.hpp"
 #include "reactor.hpp"
 
+Graph g;
 constexpr const char* PORT = "9034";   // port we're listening on
 
 class Server {
@@ -126,7 +127,6 @@ private:
     }
 
     void handle_client_data(int fd) {
-        std::cout << "Handling client data on fd: " << fd << std::endl;
         char buf[256];
         int nbytes = recv(fd, buf, sizeof buf, 0);
         if (nbytes <= 0) {
@@ -142,9 +142,16 @@ private:
             if (input[0] == 'q'){
                 reactor->stopReactor();
             }
-            std::vector<int> data = parse(input);
-            eval(data);
-            std::cout << "input: " << input << std::endl;
+            try
+            {
+                input = input.substr(0, input.length() - 1);
+                std::vector<string> data = g.parse(input);
+                g.eval(data);            }
+            catch(const std::exception& e)
+            {
+                std::cout << e.what() << '\n';
+            }
+
 
             // // Send to all other clients
             // for (const auto& [j, _] : reactor->getFdMap()) {
