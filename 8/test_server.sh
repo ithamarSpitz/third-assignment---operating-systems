@@ -1,25 +1,23 @@
 #!/bin/bash
 
-run_client() {
+send_commands() {
     local file=$1
+    local delay=$2
+    sleep $delay  # Initial delay to sync clients
     while IFS= read -r line
     do
         echo "Sending: $line"
         echo "$line" | nc -q 1 localhost 9034
         echo "Response received"
-        sleep 1  # Wait for 1 second between commands
+        sleep 0.5  # Small delay between commands
     done < "$file"
 }
 
-# Run clients in background
-run_client client1_commands.txt > client1_output.txt 2>&1 &
-PID1=$!
-sleep 0.5  # Small delay to offset the clients
-run_client client2_commands.txt > client2_output.txt 2>&1 &
-PID2=$!
+# Start both clients simultaneously
+send_commands client1_commands.txt 0 > client1_output.txt 2>&1 &
+send_commands client2_commands.txt 0.25 > client2_output.txt 2>&1 &
 
 # Wait for both clients to finish
-wait $PID1
-wait $PID2
+wait
 
 echo "Test completed. Check client1_output.txt and client2_output.txt for results."

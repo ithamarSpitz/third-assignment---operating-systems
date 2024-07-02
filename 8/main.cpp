@@ -124,7 +124,7 @@ void handle_client(int fd) {
             std::string command = buffer.substr(0, pos);
             buffer.erase(0, pos + 1);
 
-            std::cout << "Received command: " << command << std::endl;
+            std::cout << "Client " << fd << " - Received command: " << command << std::endl;
 
             std::vector<string> data = g.parse(command);
 
@@ -135,7 +135,7 @@ void handle_client(int fd) {
             std::string response = result ? "Command processed successfully\n" : "Command processing failed\n";
             send(fd, response.c_str(), response.length(), 0);
             
-            std::cout << "Sent response: " << response;
+            std::cout << "Client " << fd << " - Sent response: " << response;
         }
     }
 }
