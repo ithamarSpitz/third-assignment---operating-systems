@@ -17,7 +17,7 @@ This program implements a directed graph and performs Kosaraju's algorithm to fi
    make run
    ```
 
-2. **Enter Commands**: The program reads commands from stdin. Each command should be entered on a new line.
+2. **Enter Commands**: The program reads commands from socket fds. Each command should be entered on a new line.
 
 ## Commands
 

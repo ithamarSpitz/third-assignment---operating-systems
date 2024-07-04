@@ -38,13 +38,13 @@ int main(void)
     struct sockaddr_storage remoteaddr; // client address
     socklen_t addrlen;
 
-    char buf[256];    // buffer for client data
+    char buf[2560];    // buffer for client data
     int nbytes;
 
     char remoteIP[INET6_ADDRSTRLEN];
 
     int yes=1;        // for setsockopt() SO_REUSEADDR, below
-    int i, j, rv;
+    int i, rv;
 
     struct addrinfo hints, *ai, *p;
 
@@ -148,30 +148,13 @@ int main(void)
                         // we got some data from a client
                         std::string input(buf);
                         input = input.substr(0, input.length() - 1);
-                        try
-                        {
-                            vector<string> data = g.parse(input);//from kosa.hpp
-                            g.eval(data);//from kosa.hpp
+                        vector<string> data = g.parse(input);//from kosa.hpp
+                        std::string result =  g.eval(data);
 
-                        }
-                        catch(const std::exception& e)
-                        {
-                            std::cout << e.what() << '\n';
-                        }
-                        
-                        
+                        std::string response = result != "-1" ? "Command processed successfully\n" + result : "Command processing failed\n";
 
-                        for(j = 0; j <= fdmax; j++) {
-                            // send to everyone!
-                            if (FD_ISSET(j, &master)) {
-                                // except the listener and ourselves
-                                if (j != listener && j == i) {
-                                    if (send(j, buf, nbytes, 0) == -1) {
-                                        perror("send");
-                                    }
-                                }
-                            }
-                        }
+                        send(i, response.c_str(), response.length(), 0);
+                        if (result == "-1") std::cerr << "exit" << std::endl;
                     }
                 } // END handle data from client
             } // END got new incoming connection

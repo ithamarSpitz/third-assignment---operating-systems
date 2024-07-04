@@ -21,7 +21,7 @@ public:
     void NewGraph(int n, int m);
     void printOutput(const std::vector<std::vector<int>>& components);
     vector<string> parse(const string& command);
-    bool eval(const vector<string>& parts);
+    string eval(const vector<string>& parts);
 
 private:
     void dfs1(int v, std::vector<bool>& visited, std::stack<int>& Stack);

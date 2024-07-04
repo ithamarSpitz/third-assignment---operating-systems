@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra
+CXXFLAGS = -std=c++17 -Wall -Wextra -pthread
 TARGET = main
 SRCS = main.cpp kosa.cpp
 HEADERS = kosa.hpp
@@ -19,5 +19,7 @@ $(TARGET): $(OBJS)
 clean:
 	rm -f $(TARGET) $(OBJS)
 
+run: all
+	./$(TARGET)
 
 .PHONY: all clean
