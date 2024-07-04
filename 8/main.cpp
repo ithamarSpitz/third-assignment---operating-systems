@@ -129,13 +129,15 @@ void handle_client(int fd) {
             std::vector<string> data = g.parse(command);
 
             std::lock_guard<std::mutex> lock(graph_mutex);
-            bool result = g.eval(data);
+            string result = g.eval(data);
 
             // Send response to client
-            std::string response = result ? "Command processed successfully\n" : "Command processing failed\n";
+            std::string response = result != "-1" ? "Command processed successfully\n" + result : "Command processing failed\n";
             send(fd, response.c_str(), response.length(), 0);
             
             std::cout << "Client " << fd << " - Sent response: " << response;
+            if (result == "-1") std::cerr << "exit" << std::endl;
+
         }
     }
 }

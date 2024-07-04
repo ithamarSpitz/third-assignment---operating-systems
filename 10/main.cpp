@@ -149,10 +149,9 @@ private:
 
                 // Send response to client
                 std::string response = result != "-1" ? "Command processed successfully\n" + result : "Command processing failed\n";
-                std::cout << response;
                 send(fd, response.c_str(), response.length(), 0);
-                
                 std::cout << "Client " << fd << " - Sent response: " << response;
+                if (result == "-1") std::cerr << "exit" << std::endl;
             }
         }
     }

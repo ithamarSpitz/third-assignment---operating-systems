@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <ostream>
+#include <iostream>
 
 Graph g;
 #define PORT "9034"
@@ -30,7 +32,7 @@ void *get_in_addr(struct sockaddr *sa)
 
 void handle_client(int client_fd)
 {
-    char buf[256];
+    char buf[2560];
     int nbytes;
 
     while(1) {
@@ -48,39 +50,17 @@ void handle_client(int client_fd)
         std::string input(buf);
         input = input.substr(0, input.length() - 1);
         std::vector<string> data = g.parse(input);
-        g.eval(data);
-        pthread_mutex_lock(&graph_mutex);
 
-        // if (input.find("new_graph") != std::string::npos) {
-        //     graph.clear();
-        //     graph.resize(data[1]);
-        // } else if (input.find("add_edge") != std::string::npos) {
-        //     if (data[1] < graph.size() && data[2] < graph.size()) {
-        //         graph[data[1]].push_back(data[2]);
-        //     }
-        // } else if (input.find("remove_edge") != std::string::npos) {
-        //     if (data[1] < graph.size()) {
-        //         auto it = std::find(graph[data[1]].begin(), graph[data[1]].end(), data[2]);
-        //         if (it != graph[data[1]].end()) {
-        //             graph[data[1]].erase(it);
-        //         }
-        //     }
-        // } else if (input.find("kosaraju") != std::string::npos) {
-        //     std::vector<std::vector<int>> result = kosaraju();
-        //     std::string response = "Kosaraju result: ";
-        //     for (const auto& scc : result) {
-        //         response += "[";
-        //         for (int v : scc) {
-        //             response += std::to_string(v) + ",";
-        //         }
-        //         response += "] ";
-        //     }
-        //     send(client_fd, response.c_str(), response.length(), 0);
-        // }
+        pthread_mutex_lock(&graph_mutex);
+        std::string result =  g.eval(data);
 
         pthread_mutex_unlock(&graph_mutex);
+        
+        std::string response = result != "-1" ? "Command processed successfully\n" + result : "Command processing failed\n";
 
-        send(client_fd, "Command processed", 18, 0);
+        send(client_fd, response.c_str(), response.length(), 0);
+        if (result == "-1") std::cerr << "exit" << std::endl;
+
     }
 }
 

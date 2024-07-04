@@ -153,7 +153,7 @@ string Graph::eval(const vector<string>& parts) {
         string res;
         for (const auto& component : components) {
             for (int vertex : component) {
-                res = to_string(vertex) + " ";
+                res += to_string(vertex) + " ";
             }
             res += "\n";        
         }
