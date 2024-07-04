@@ -1,0 +1,18 @@
+Newedge 55,1
+Newedge 56,10
+Newedge 57,20
+Newedge 58,30
+Newedge 59,40
+Kosaraju
+Removeedge 10,11
+Removeedge 30,31
+Removeedge 50,51
+Removeedge 70,71
+Removeedge 90,91
+Kosaraju
+Newedge 1,100
+Newedge 20,81
+Newedge 40,61
+Newedge 60,41
+Newedge 80,21
+Kosaraju

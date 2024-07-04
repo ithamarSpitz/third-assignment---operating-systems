@@ -1,4 +1,4 @@
-// selectserver.cpp
+// main.cpp
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -11,15 +11,17 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <mutex>
 #include "kosa.hpp"
 #include "reactor.hpp"
 
 Graph g;
-constexpr const char* PORT = "9034";   // port we're listening on
+std::mutex graph_mutex;
+constexpr const char* PORT = "9034";
 
 class Server {
 public:
-    Server() : reactor(std::make_unique<Reactor<int>>()) {}
+    Server() : proactor(std::make_unique<Proactor<int>>()) {}
 
     void run() {
         int listener = setup_listener();
@@ -28,34 +30,27 @@ public:
             return;
         }
 
-        reactor->addFdToReactor(listener, [this](int fd) { handle_new_connection(fd); });
-        reactor->startReactor();
+        pthread_t proactor_tid = proactor->startProactor(listener, [this](int fd) { handle_client(fd); });
 
         std::cout << "Server running. Press 'q' to quit." << std::endl;
 
-        // Non-blocking input handling
         while (true) {
             if (std::cin.rdbuf()->in_avail() > 0) {
                 char input;
                 std::cin >> input;
-
-                cout << input << endl;
                 if (input == 'q') {
                     break;
                 }
             }
-
-            // Sleep for a short duration to avoid busy waiting
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        reactor->stopReactor();
+        proactor->stopProactor(proactor_tid);
         close(listener);
     }
 
-
 private:
-    std::unique_ptr<Reactor<int>> reactor;
+    std::unique_ptr<Proactor<int>> proactor;
 
     static void* get_in_addr(struct sockaddr *sa) {
         if (sa->sa_family == AF_INET) {
@@ -107,27 +102,10 @@ private:
         return listener;
     }
 
-    void handle_new_connection(int listener) {
-        struct sockaddr_storage remoteaddr;
-        char remoteIP[INET6_ADDRSTRLEN];
-        socklen_t addrlen = sizeof remoteaddr;
-        int newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen);
-
-        if (newfd == -1) {
-            perror("accept");
-        } else {
-            std::cout << "New connection from " 
-                      << inet_ntop(remoteaddr.ss_family,
-                                   get_in_addr((struct sockaddr*)&remoteaddr),
-                                   remoteIP, INET6_ADDRSTRLEN)
-                      << " on socket " << newfd << '\n';
-        
-            reactor->addFdToReactor(newfd, [this](int fd) { handle_client_data(fd); });
-        }
-    }
-
-    void handle_client_data(int fd) {
-        char buf[2560];
+void handle_client(int fd) {
+    std::string buffer;
+    char buf[256];
+    while (true) {
         int nbytes = recv(fd, buf, sizeof buf, 0);
         if (nbytes <= 0) {
             if (nbytes == 0) {
@@ -136,28 +114,33 @@ private:
                 perror("recv");
             }
             close(fd);
-            reactor->removeFdFromReactor(fd);
-        } else {
-            std::string input(buf, nbytes);
-            if (input[0] == 'q'){
-                reactor->stopReactor();
-            }
+            return;
+        }
 
-            input = input.substr(0, input.length() - 1);
-            std::vector<string> data = g.parse(input);
-            std::string result =  g.eval(data);
+        buffer.append(buf, nbytes);
 
+        size_t pos;
+        while ((pos = buffer.find('\n')) != std::string::npos) {
+            std::string command = buffer.substr(0, pos);
+            buffer.erase(0, pos + 1);
+
+            std::cout << "Client " << fd << " - Received command: " << command << std::endl;
+
+            std::vector<string> data = g.parse(command);
+
+            std::lock_guard<std::mutex> lock(graph_mutex);
+            string result = g.eval(data);
+
+            // Send response to client
             std::string response = result != "-1" ? "Command processed successfully\n" + result : "Command processing failed\n";
-
             send(fd, response.c_str(), response.length(), 0);
+            
+            std::cout << "Client " << fd << " - Sent response: " << response;
             if (result == "-1") std::cerr << "exit" << std::endl;
 
         }
-        reactor->addFdToReactor(fd, [this](int fd) { handle_client_data(fd); });
-
     }
-
-
+}
 };
 
 int main() {

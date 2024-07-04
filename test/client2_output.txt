@@ -1,0 +1,149 @@
+Sending: Newedge 55,1
+Command processed successfully
+Response received
+Sending: Newedge 56,10
+Command processed successfully
+Response received
+Sending: Newedge 57,20
+Command processed successfully
+Response received
+Sending: Newedge 58,30
+Command processed successfully
+Response received
+Sending: Newedge 59,40
+Command processed successfully
+Response received
+Sending: Kosaraju
+Command processed successfully
+1 55 6 5 4 3 2 54 53 52 51 50 49 48 47 46 45 44 43 42 41 40 39 38 37 36 35 34 33 32 31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 56 57 58 59 100 99 98 97 96 95 94 93 92 91 90 89 88 87 86 85 84 83 82 81 80 79 78 77 76 75 74 73 72 71 70 69 68 67 66 65 64 63 62 61 60 
+Response received
+Sending: Removeedge 10,11
+Command processed successfully
+Response received
+Sending: Removeedge 30,31
+Command processed successfully
+Response received
+Sending: Removeedge 50,51
+Command processed successfully
+Response received
+Sending: Removeedge 70,71
+Command processed successfully
+Response received
+Sending: Removeedge 90,91
+Command processed successfully
+Response received
+Sending: Kosaraju
+Command processed successfully
+41 
+42 
+91 
+43 
+92 
+44 
+93 
+45 
+94 
+46 
+95 
+47 
+96 
+48 
+97 
+49 
+98 
+31 
+32 
+33 
+34 
+35 
+36 
+37 
+38 
+39 
+21 
+22 
+71 
+23 
+72 
+24 
+73 
+25 
+74 
+26 
+75 
+27 
+76 
+28 
+77 
+29 
+78 
+11 
+12 
+61 
+13 
+62 
+14 
+63 
+15 
+64 
+16 
+65 
+17 
+66 
+18 
+67 
+19 
+68 
+2 
+51 
+3 
+52 
+4 
+53 
+5 
+54 
+6 
+55 
+7 
+56 
+8 
+57 
+20 
+69 
+70 
+9 
+58 
+30 
+79 
+80 
+81 
+82 
+83 
+84 
+85 
+86 
+87 
+88 
+10 
+59 
+40 
+89 
+90 
+1 100 99 50 
+60 
+Response received
+Sending: Newedge 1,100
+Command processed successfully
+Response received
+Sending: Newedge 20,81
+Command processed successfully
+Response received
+Sending: Newedge 40,61
+Command processed successfully
+Response received
+Sending: Newedge 60,41
+Command processed successfully
+Response received
+Sending: Newedge 80,21
+Command processed successfully
+Response received

@@ -19,7 +19,6 @@ public:
     void RemoveEdge(int i, int j);
     std::vector<std::vector<int>> Kosaraju();
     void NewGraph(int n, int m);
-    void printOutput(const std::vector<std::vector<int>>& components);
     vector<string> parse(const string& command);
     string eval(const vector<string>& parts);
 

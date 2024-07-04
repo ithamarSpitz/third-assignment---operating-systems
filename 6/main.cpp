@@ -127,7 +127,7 @@ private:
     }
 
     void handle_client_data(int fd) {
-        char buf[256];
+        char buf[2560];
         int nbytes = recv(fd, buf, sizeof buf, 0);
         if (nbytes <= 0) {
             if (nbytes == 0) {
@@ -142,25 +142,16 @@ private:
             if (input[0] == 'q'){
                 reactor->stopReactor();
             }
-            try
-            {
-                input = input.substr(0, input.length() - 1);
-                std::vector<string> data = g.parse(input);
-                g.eval(data);            }
-            catch(const std::exception& e)
-            {
-                std::cout << e.what() << '\n';
-            }
 
+            input = input.substr(0, input.length() - 1);
+            std::vector<string> data = g.parse(input);
+            std::string result =  g.eval(data);
 
-            // // Send to all other clients
-            // for (const auto& [j, _] : reactor->getFdMap()) {
-            //     if (j != fd) {
-            //         if (send(j, buf, nbytes, 0) == -1) {
-            //             perror("send");
-            //         }
-            //     }
-            // }
+            std::string response = result != "-1" ? "Command processed successfully\n" + result : "Command processing failed\n";
+
+            send(fd, response.c_str(), response.length(), 0);
+            if (result == "-1") std::cerr << "exit" << std::endl;
+
         }
         reactor->addFdToReactor(fd, [this](int fd) { handle_client_data(fd); });
 

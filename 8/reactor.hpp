@@ -1,6 +1,7 @@
 // reactor.hpp
 #ifndef REACTOR_HPP
 #define REACTOR_HPP
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -14,8 +15,9 @@
 #include <atomic>
 #include <iostream>
 #include <algorithm>
-
-using namespace std;
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 template<typename T>
 class Reactor {
@@ -89,5 +91,46 @@ private:
     std::thread reactor_thread;
 };
 
+template<typename T>
+class Proactor {
+public:
+    using ProactorFunc = std::function<void(int)>;
+
+    Proactor() : running(false) {}
+
+    pthread_t startProactor(int sockfd, ProactorFunc func) {
+        running = true;
+        proactor_thread = std::thread(&Proactor::run, this, sockfd, func);
+        return proactor_thread.native_handle();
+    }
+
+    int stopProactor(pthread_t tid) {
+        running = false;
+        if (proactor_thread.joinable()) {
+            proactor_thread.join();
+        }
+        return 0;
+    }
+
+private:
+    void run(int sockfd, ProactorFunc func) {
+        while (running) {
+            sockaddr_storage remoteaddr;
+            socklen_t addrlen = sizeof remoteaddr;
+            int newfd = accept(sockfd, (struct sockaddr *)&remoteaddr, &addrlen);
+
+            if (newfd == -1) {
+                perror("accept");
+                continue;
+            }
+
+            std::thread client_thread(func, newfd);
+            client_thread.detach();
+        }
+    }
+
+    std::atomic<bool> running;
+    std::thread proactor_thread;
+};
 
 #endif // REACTOR_HPP

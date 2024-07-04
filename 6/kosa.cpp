@@ -137,46 +137,53 @@ vector<string> Graph::parse(const string& command) {
     return vector<string>();
 }
 
-bool Graph::eval(const vector<string>& parts) {
+string Graph::eval(const vector<string>& parts) {
     const string& cmd = parts[0];
 
     if (cmd == "exit") {
-        return false;
+        return "-1";
     } 
     if (cmd == "Newgraph") {
         int n = stoi(parts[1]);
         int m = stoi(parts[2]);
         //If Number of vertices of edges < 1 - exit program
-        if (n < 1 || m < 1) return false;
+        if (n < 1 || m < 1) return "-1";
         NewGraph(n, m);
         //If edges failed to complete - exit program
         if (!evalEdges(parts))
         {
-            return false;
+            return "-1";
         }
     }
     else if (cmd == "Kosaraju") {
         vector<vector<int>> components = Kosaraju();
         //If Kosaraju failed - exit program
-        if (components.empty()) return false;
-        printOutput(components);
+        if (components.empty()) return "-1";
+        string res;
+        for (const auto& component : components) {
+            for (int vertex : component) {
+                res += to_string(vertex) + " ";
+            }
+            res += "\n";        
+        }
+        return res;
     } 
     else if (cmd == "Newedge") {
         int i = stoi(parts[1]);
         int j = stoi(parts[2]);
         //If edges wrong - exit program
-        if (i > n || i < 1 || j > n || j < 1) return false;
+        if (i > n || i < 1 || j > n || j < 1) return "-1";
         NewEdge(i, j);
     } 
     else if (cmd == "Removeedge") {
         int i = stoi(parts[1]);
         int j = stoi(parts[2]);
         //If edges wrong - exit program
-        if (i > n || i < 1 || j > n || j < 1) return false;
+        if (i > n || i < 1 || j > n || j < 1) return "-1";
         RemoveEdge(i, j);
     }
     
-    return true;
+    return "";
 }
 
 bool Graph::evalEdges(const vector<string>& parts) {
