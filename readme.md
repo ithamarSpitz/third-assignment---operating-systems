@@ -2,11 +2,11 @@
 
 This program implements a directed graph and performs Kosaraju's algorithm to find strongly connected components.
 
-# Notice!
+## Notice!
 
-   ## - this reademe is valid for step 4 to 10 earlier steps have their own readmes.
+   ### - this reademe is valid for step 4 to 10. earlier steps have their own readmes.
    
-   ## - Netzer said we can have minor changes in the Protocol.We changed only the new graph command - in our project is one line command.
+   ### - Netzer said we can have minor changes in the Protocol.We changed only the new graph command - in our project is one line command.
 
 ## Features
 
