@@ -32,7 +32,7 @@ public:
 
         pthread_t proactor_tid = proactor->startProactor(listener, [this](int fd) { handle_client(fd); });
 
-        std::cout << "Server running. Press 'q' to quit." << std::endl;
+        std::cout << "Server running." << std::endl;
 
         while (true) {
             if (std::cin.rdbuf()->in_avail() > 0) {

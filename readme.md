@@ -1,6 +1,12 @@
 # Graph Implementation and Kosaraju's Algorithm
 
-This program implements a directed graph and performs Kosaraju's algorithm to find strongly connected components. The graph supports interactive commands via standard input (stdin).
+This program implements a directed graph and performs Kosaraju's algorithm to find strongly connected components.
+
+## Notice!
+
+    - this reademe is valid for step 4 to 10 earlier steps have their own readmes.
+   
+    - Netzer said we can have minor changes in the Protocol.We changed only the new graph command - in our project is one line command.
 
 ## Features
 
@@ -14,10 +20,18 @@ This program implements a directed graph and performs Kosaraju's algorithm to fi
 
 1. **Compile the Program && Run the Program**:
    ```sh
-   make run
+   make
+   cd {STEP_NUMBER}
+   ./main
    ```
 
-2. **Enter Commands**: The program reads commands from socket fds. Each command should be entered on a new line.
+2. **Initiate Connection With client(s)**
+Open a new terminal
+run nc as written below:
+   ```sh
+   nc localhost 9034
+   ```
+now you can use the graph commands!
 
 ## Commands
 
@@ -64,6 +78,15 @@ Exits the program.
 **Example**:
 ```
 exit
+```
+
+## tests
+
+Run a test file to check the program.
+Do it from different terminal of the running server.
+
+```
+make tests
 ```
 
 ---
