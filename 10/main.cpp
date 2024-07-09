@@ -41,7 +41,7 @@ public:
         // Start SCC monitor thread
         std::thread scc_monitor_thread(&Server::scc_monitor, this);
 
-        std::cout << "Server running. Press 'q' to quit." << std::endl;
+        std::cout << "Server running." << std::endl;
 
         while (true) {
             if (std::cin.rdbuf()->in_avail() > 0) {

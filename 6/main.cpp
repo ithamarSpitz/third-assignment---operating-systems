@@ -31,7 +31,7 @@ public:
         reactor->addFdToReactor(listener, [this](int fd) { handle_new_connection(fd); });
         reactor->startReactor();
 
-        std::cout << "Server running. Press 'q' to quit." << std::endl;
+        std::cout << "Server running." << std::endl;
 
         // Non-blocking input handling
         while (true) {
